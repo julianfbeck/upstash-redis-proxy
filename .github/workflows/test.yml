@@ -1,0 +1,50 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Start Redis
+      uses: supercharge/redis-github-action@1.7.0
+      with:
+        redis-version: '7'
+
+    - name: Install Node.js dependencies
+      run: npm install
+
+    - name: Run Go tests
+      run: go test -v ./...
+
+    - name: Start proxy server
+      run: |
+        go build
+        ./upstash-proxy &
+        sleep 2 # Wait for server to start
+
+    - name: Run integration tests
+      run: node test-client.js
+
+    - name: Cleanup
+      run: |
+        pkill upstash-proxy || true
+        sleep 1
