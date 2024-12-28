@@ -4,6 +4,9 @@
 
 A Go-based HTTP proxy that forwards Upstash Redis REST API requests to a local Redis instance.
 
+
+**It works for basic Redis commands i havent tested everything so far**
+
 ## Features
 
 - Supports Upstash Redis REST API commands

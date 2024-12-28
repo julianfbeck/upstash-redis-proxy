@@ -87,9 +87,19 @@ func handleMonitor(w http.ResponseWriter, r *http.Request) {
 
 	// Listen for messages
 	ch := pubsub.Channel()
-	for msg := range ch {
-		fmt.Fprintf(w, "data: %s\n\n", msg.Payload)
-		w.(http.Flusher).Flush()
+	done := ctx.Done()
+
+	for {
+		select {
+		case <-done:
+			return
+		case msg, ok := <-ch:
+			if !ok {
+				return
+			}
+			fmt.Fprintf(w, "data: %s\n\n", msg.Payload)
+			w.(http.Flusher).Flush()
+		}
 	}
 }
 
@@ -113,9 +123,19 @@ func handleSubscribe(w http.ResponseWriter, r *http.Request) {
 
 	// Listen for messages
 	ch := pubsub.Channel()
-	for msg := range ch {
-		fmt.Fprintf(w, "event: message\ndata: {\"channel\":\"%s\",\"message\":\"%s\"}\n\n", msg.Channel, msg.Payload)
-		w.(http.Flusher).Flush()
+	done := ctx.Done()
+
+	for {
+		select {
+		case <-done:
+			return
+		case msg, ok := <-ch:
+			if !ok {
+				return
+			}
+			fmt.Fprintf(w, "event: message\ndata: {\"channel\":\"%s\",\"message\":\"%s\"}\n\n", msg.Channel, msg.Payload)
+			w.(http.Flusher).Flush()
+		}
 	}
 }
 
